@@ -1,7 +1,7 @@
 import java.net.*;
 import java.io.*;
 import javax.net.ssl.*;
-import java.security.cert.X509Certificate;
+
 import java.security.KeyStore;
 import java.security.cert.*;
 
@@ -16,6 +16,11 @@ import java.security.cert.*;
 
 public class client {
   public static void main(String[] args) throws Exception {
+    System.setProperty("javax.net.ssl.keyStore", "clientkeystore");
+    System.setProperty("javax.net.ssl.keyStorePassword", "password");
+    System.setProperty("javax.net.ssl.trustStore", "clienttruststore");
+    System.setProperty("javax.net.ssl.trustStorePassword", "password");
+
     String host = null;
     int port = -1;
     for (int i = 0; i < args.length; i++) {
@@ -70,7 +75,12 @@ public class client {
       SSLSession session = socket.getSession();
       Certificate[] cert = session.getPeerCertificates();
       String subject = ((X509Certificate) cert[0]).getSubjectX500Principal().getName();
+      String issuer = ((X509Certificate) cert[0]).getIssuerX500Principal().getName();
+      java.math.BigInteger serialNumber = ((X509Certificate) cert[0]).getSerialNumber();
+
       System.out.println("certificate name (subject DN field) on certificate received from server:\n" + subject + "\n");
+      System.out.println("certificate name (issuer DN field) on certificate received from server:\n" + issuer + "\n");
+      System.out.println("serial number on certificate received from server: " + serialNumber.toString(16));
       System.out.println("socket after handshake:\n" + socket + "\n");
       System.out.println("secure connection established\n\n");
 

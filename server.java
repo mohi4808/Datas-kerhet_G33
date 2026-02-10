@@ -22,9 +22,14 @@ public class server implements Runnable {
       SSLSession session = socket.getSession();
       Certificate[] cert = session.getPeerCertificates();
       String subject = ((X509Certificate) cert[0]).getSubjectX500Principal().getName();
+      String issuer = ((X509Certificate) cert[0]).getIssuerX500Principal().getName();
+      java.math.BigInteger serialNumber = ((X509Certificate) cert[0]).getSerialNumber();
+
       numConnectedClients++;
       System.out.println("client connected");
       System.out.println("client name (cert subject DN field): " + subject);
+      System.out.println("client issuer (cert issuer DN field): " + issuer);
+      System.out.println("client cert serial number: " + serialNumber.toString(16));
       System.out.println(numConnectedClients + " concurrent connection(s)\n");
 
       PrintWriter out = null;
@@ -56,6 +61,11 @@ public class server implements Runnable {
   
   private void newListener() { (new Thread(this)).start(); } // calls run()
   public static void main(String args[]) {
+    System.setProperty("javax.net.ssl.keyStore", "serverkeystore");
+    System.setProperty("javax.net.ssl.keyStorePassword", "password");
+    System.setProperty("javax.net.ssl.trustStore", "servertruststore");
+    System.setProperty("javax.net.ssl.trustStorePassword", "password");
+
     System.out.println("\nServer Started\n");
     int port = -1;
     if (args.length >= 1) {
