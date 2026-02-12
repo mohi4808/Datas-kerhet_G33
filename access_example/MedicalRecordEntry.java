@@ -2,13 +2,14 @@ package access_example;
 import access_example.UserId;
 import access_example.UserType;
 public class MedicalRecordEntry {
+  public int recordID;
   public UserId patient;
   public UserId nurse;
   public UserId doctor;
   public String division;
   public String content;
 
-  public MedicalRecordEntry(UserId patient, UserId nurse, UserId doctor, String division, String content){
+  public MedicalRecordEntry(int RecordId, UserId patient, UserId nurse, UserId doctor, String division, String content){
     this.patient = patient;
     this.nurse = nurse;
     this.doctor = doctor;
