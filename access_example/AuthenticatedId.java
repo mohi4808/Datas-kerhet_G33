@@ -1,2 +1,3 @@
 package access_example;
-public record AuthenticatedId(int id){}
+import access_example.UserId;
+public record AuthenticatedId(UserId id){}
