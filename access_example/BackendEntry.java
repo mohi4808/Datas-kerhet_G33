@@ -21,7 +21,7 @@ public class BackendEntry {
   public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
     return records.stream()
       .filter(r -> r.patient == patient)
-      .filter(r-> r.patient == requestor.id() || isAssociated(r, requestor) || isSameDivision(r, requestor))
+      .filter(r-> r.patient == requestor.id() || isAssociated(r, requestor) || isSameDivision(r, requestor) || isAuthority(requestor))
       .collect(toList());
   }
   public void ReplaceRecordContent(RecordId recordId, String newContent, AuthenticatedId requestor){
