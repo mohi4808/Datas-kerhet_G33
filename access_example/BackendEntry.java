@@ -13,19 +13,23 @@ public class BackendEntry {
   private Log log;
   private HashMap<UserId, UserInfo> users;
 
-public List<MedicalRecordEntry> requestPatientRecords(UserId patient, UserId requestor){
-  // nurse/doctor tries to access -> retrun those in the same division or with them listed in it 
-  // patient tries to access their own -> return their own 
-  // patient tries to access others -> Warning/Denied 
-  return null; 
-}
-public MedicalRecordEntry createNewRecord(UserId creator_id, UserId patient_id, UserId nurse_id){
-  // if doctor -> adds a new entry with them as the doctor under their divisision
-  // else -> rejection / warning; 
-  return null;
-}
-public void deleteRecord(UserId id){
-  // if authority -> yes 
-  // else -> rejection /warning 
-}
+  public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
+    // nurse/doctor tries to access -> retrun those in the same division or with them listed in it 
+    // patient tries to access their own -> return their own 
+    // patient tries to access others -> Warning/Denied 
+    return null; 
+  }
+  public void ReplaceRecordContent(RecordId recordID, AuthenticatedId requestor){
+    // nurse/ doctor associated with record -> pass 
+    // else -> warning 
+  }
+  public MedicalRecordEntry createNewRecord(AuthenticatedId creator_id, UserId patient_id, UserId nurse_id){
+    // if doctor -> adds a new entry with them as the doctor under their divisision
+    // else -> rejection / warning; 
+    return null;
+  }
+  public void deleteRecord(AuthenticatedId id, RecordId recordId){
+    // if authority -> yes 
+    // else -> rejection /warning 
+  }
 }
