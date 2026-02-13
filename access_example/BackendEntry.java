@@ -1,5 +1,6 @@
 import access_example.UserId;
 import access_example.UserInfo;
+import access_example.UserType;
 import access_example.MedicalRecordEntry;
 import access_example.Log;
 import access_example.RecordId;
@@ -26,13 +27,14 @@ public class BackendEntry {
     if(!isDoctor(requestor) && !isNurse(requestor)){
       return;
     } 
-    if(!isAssociated(requestor) && !isSameDivision(requestor)){
+    MedicalRecordEntry entry = records.stream().filter(r -> r.recordId == recordId).findAny().orElse(null);
+    if(entry == null){
       return;
     }
-    MedicalRecordEntry entry = records.stream().filter(r -> r.recordId == recordId).findAny().orElse(null);
-    if(entry != null){
-      entry.content = newContent;
+    if(!isAssociated(entry,requestor) && !isSameDivision(entry, requestor)){
+      return;
     }
+    entry.content = newContent;
   }
   public void createNewRecord(UserId patient, UserId nurse, AuthenticatedId requestor){
     if(isDoctor(requestor)){
@@ -47,18 +49,21 @@ public class BackendEntry {
     }
   }
   private boolean isAuthority(AuthenticatedId requestor){
-    return false;
+    UserInfo info = users.get(requestor.id());
+    return info.type == UserType.AUTHORITY;
   }  
   private boolean isDoctor(AuthenticatedId requestor){
-    return false;
+    UserInfo info = users.get(requestor.id());
+    return info.type == UserType.DOCTOR;
   }
   private boolean isNurse(AuthenticatedId requestor){
-    return false;
+    UserInfo info = users.get(requestor.id());
+    return info.type == UserType.NURSE;
   }
-  private boolean isAssociated(AuthenticatedId requestor){
-    return false;
+  private boolean isAssociated(MedicalRecordEntry entry, AuthenticatedId requestor){
+   return false; 
   }
-  private boolean isSameDivision(AuthenticatedId requestor){
+  private boolean isSameDivision(MedicalRecordEntry entry, AuthenticatedId requestor){
     return false;
   }
   private String divisionOf(AuthenticatedId requestor){
