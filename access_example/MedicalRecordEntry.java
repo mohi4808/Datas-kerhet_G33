@@ -9,12 +9,12 @@ public class MedicalRecordEntry {
   public String division;
   public String content;
 
-  public MedicalRecordEntry(RecordId recordId, UserId patient, UserId nurse, UserId doctor, String division, String content){
+  public MedicalRecordEntry(RecordId recordId, UserId patient, UserId nurse, UserId doctor, String division){
     this.recordId = recordId;
     this.patient = patient;
     this.nurse = nurse;
     this.doctor = doctor;
     this.division = division;
-    this.content = content;
+    this.content = "";
   }
 }

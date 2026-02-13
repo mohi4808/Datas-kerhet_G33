@@ -5,6 +5,7 @@ import access_example.MedicalRecordEntry;
 import access_example.Log;
 import access_example.RecordId;
 import access_example.AuthenticatedId;
+import static java.util.stream.Collectors.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,10 +19,10 @@ public class BackendEntry {
   private int counter;
 
   public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
-    // nurse/doctor tries to access -> retrun those in the same division or with them listed in it 
-    // patient tries to access their own -> return their own 
-    // patient tries to access others -> Warning/Denied 
-    return null; 
+    return records.stream()
+      .filter(r -> r.patient == patient)
+      .filter(r-> r.patient == requestor.id() || isAssociated(r, requestor) || isSameDivision(r, requestor))
+      .collect(toList());
   }
   public void ReplaceRecordContent(RecordId recordId, String newContent, AuthenticatedId requestor){
     if(!isDoctor(requestor) && !isNurse(requestor)){
@@ -39,7 +40,7 @@ public class BackendEntry {
   public void createNewRecord(UserId patient, UserId nurse, AuthenticatedId requestor){
     if(isDoctor(requestor)){
       counter++;
-      MedicalRecordEntry entry = new MedicalRecordEntry(new RecordId(counter), patient, nurse, requestor.id(), divisionOf(requestor), "");
+      MedicalRecordEntry entry = new MedicalRecordEntry(new RecordId(counter), patient, nurse, requestor.id(), divisionOf(requestor).get());
       records.add(entry);
     }
   }
@@ -61,12 +62,16 @@ public class BackendEntry {
     return info.type == UserType.NURSE;
   }
   private boolean isAssociated(MedicalRecordEntry entry, AuthenticatedId requestor){
-   return false; 
+    return (entry.nurse == requestor.id() || entry.doctor == requestor.id());
   }
   private boolean isSameDivision(MedicalRecordEntry entry, AuthenticatedId requestor){
-    return false;
+    if (!divisionOf(requestor).isPresent()){
+      return false;
+    } 
+    return entry.division == divisionOf(requestor).get();
   }
-  private String divisionOf(AuthenticatedId requestor){
-    return "todo";
+  private Optional<String> divisionOf(AuthenticatedId requestor){
+    UserInfo info = users.get(requestor.id());
+    return info.division;
   }
 }
