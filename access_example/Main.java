@@ -2,6 +2,7 @@ import access_example.UserId;
 import access_example.UserInfo;
 import access_example.MedicalRecordEntry;
 import access_example.Log;
+import access_example.BackendEntry;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,12 +15,8 @@ public class Main {
   private HashMap<UserId, UserInfo> users;
 
   public static void main(String[] args) {
-    UserId id_1 = new UserId(130);
-    UserInfo info_1 = UserInfo.newPatient("John Doe");
-    HashMap<UserId, UserInfo> map = new HashMap<>();
-    map.put(id_1, info_1);
-    System.out.println(map);
-    System.out.println(info_1.name);
+  BackendEntry entry = new BackendEntry();
+
   }
 }
 
