@@ -10,13 +10,10 @@ public class Log{
   public void start(){
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
     Date date = new Date();
-    this.log = this.log + formatter.format(date) +  "---------------------------\n";
+    this.log = this.log + "\n--------------" + formatter.format(date) +  "-------------\n";
   }
   public void append(String entry){
     this.log = this.log + entry;
-  }
-  public void end(){
-    this.log = this.log + "\n";
   }
   public String content(){
     return this.log;

@@ -31,9 +31,12 @@ public class BackendEntry {
     users.put(nurseA, UserInfo.newNurse("R.N. Annie Wilkes", "A"));
     users.put(patient1, UserInfo.newPatient("John Doe"));
     
-    RecordId record1 = createNewRecord(patient1, nurseA, new AuthenticatedId(doctorA));
+    RecordId record1 = createNewRecord(patient1, nurseA, new AuthenticatedId(doctorA)).get();
     requestPatientRecords(patient1, new AuthenticatedId(patient1));
     requestPatientRecords(patient1, new AuthenticatedId(doctorB));
+    replaceRecordContent(record1, "test ", new AuthenticatedId(patient1));
+    replaceRecordContent(record1, "test ", new AuthenticatedId(nurseA));
+    replaceRecordContent(record1, "test ", new AuthenticatedId(doctorB));
     log.print();
   }
 
@@ -50,35 +53,53 @@ public class BackendEntry {
     accesibleRecords
       .stream()
       .forEach(r -> log.append(r.recordId.toString() + "\n"));
-    log.end();
 
     return accesibleRecords;
   }
-  public void ReplaceRecordContent(RecordId recordId, String newContent, AuthenticatedId requestor){
-    if(!isDoctor(requestor) && !isNurse(requestor)){
+  public void replaceRecordContent(RecordId recordId, String newContent, AuthenticatedId requestor){
+    log.start();
+    log.append("User " + requestor.toString() + " requested to change the record " + recordId.toString() + "\n"); 
+    if(!isDoctor(requestor) && !isNurse(requestor) && !isAuthority(requestor)){ 
+      log.append("DENIED: unsuitable role, patients can't change record content\n");
       return;
     } 
     MedicalRecordEntry entry = records.stream().filter(r -> r.recordId == recordId).findAny().orElse(null);
     if(entry == null){
+      log.append("ERROR: no such entry exists\n");
       return;
     }
     if(!isAssociated(entry,requestor) && !isSameDivision(entry, requestor)){
+      log.append("DENIED: user is not associated with the record nor in the same division \n");
       return;
     }
+    log.append("user was allowed access\n");
     entry.content = newContent;
   }
-  public RecordId createNewRecord(UserId patient, UserId nurse, AuthenticatedId requestor){
+  public Optional<RecordId> createNewRecord(UserId patient, UserId nurse, AuthenticatedId requestor){
+    log.start();
+    log.append("User " + requestor.toString() + " request creation of new record for patient " + patient.toString() + "\n");
     if(isDoctor(requestor)){
       counter++;
-      MedicalRecordEntry entry = new MedicalRecordEntry(new RecordId(counter), patient, nurse, requestor.id(), divisionOf(requestor).get());
+      RecordId recordId = new RecordId(counter);
+      MedicalRecordEntry entry = new MedicalRecordEntry(recordId, patient, nurse, requestor.id(), divisionOf(requestor).get());
       records.add(entry);
+      log.append("Record " + recordId.toString() + " was successfully created\n");
+      return Optional.of(recordId);
+    } else {
+      log.append("DENIED: not a doctor\n");
+      return Optional.empty();
     }
-    return new RecordId(counter);
   }
   public void deleteRecord(RecordId recordId, AuthenticatedId requestor){
+    log.start();
+    log.append("User " + requestor.toString() + " request deletion of record " + recordId.toString() + "\n");
     if (isAuthority(requestor)){
+      log.append("Deletion allowed, if the record existed it has now been deleted");
       records.removeIf(r -> r.recordId == recordId);
+    } else {
+      log.append("DENIED: user is not an authority");
     }
+
   }
   private boolean isAuthority(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
