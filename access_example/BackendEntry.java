@@ -19,6 +19,10 @@ public class BackendEntry {
   private HashMap<UserId, UserInfo> users = new HashMap<>();
   private int counter = 0;
 
+  public UserInfo whoAmI(AuthenticatedId requestor){
+    return users.get(requestor.id());
+  } 
+
   public BackendEntry(){
     // Some innitial hard coded users
     UserId doctorA = new UserId(1);
@@ -37,14 +41,14 @@ public class BackendEntry {
     replaceRecordContent(record1, "test ", new AuthenticatedId(patient1));
     replaceRecordContent(record1, "test ", new AuthenticatedId(nurseA));
     replaceRecordContent(record1, "test ", new AuthenticatedId(doctorB));
-    log.print();
+    //log.print();
   }
 
   public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
     // fetch all records the user has access to 
     List<MedicalRecordEntry> accesibleRecords = records.stream()
-      .filter(r -> r.patient == patient)
-      .filter(r-> r.patient == requestor.id() || isAssociated(r, requestor) || isSameDivision(r, requestor) || isAuthority(requestor))
+      .filter(r -> r.patient.equals(patient))
+      .filter(r-> r.patient.equals(requestor.id()) || isAssociated(r, requestor) || isSameDivision(r, requestor) || isAuthority(requestor))
       .collect(toList());
 
     log.start();
@@ -53,7 +57,6 @@ public class BackendEntry {
     accesibleRecords
       .stream()
       .forEach(r -> log.append(r.recordId.toString() + "\n"));
-
     return accesibleRecords;
   }
   public void replaceRecordContent(RecordId recordId, String newContent, AuthenticatedId requestor){
@@ -63,7 +66,7 @@ public class BackendEntry {
       log.append("DENIED: unsuitable role, patients can't change record content\n");
       return;
     } 
-    MedicalRecordEntry entry = records.stream().filter(r -> r.recordId == recordId).findAny().orElse(null);
+    MedicalRecordEntry entry = records.stream().filter(r -> r.recordId.equals(recordId)).findAny().orElse(null);
     if(entry == null){
       log.append("ERROR: no such entry exists\n");
       return;
@@ -95,7 +98,7 @@ public class BackendEntry {
     log.append("User " + requestor.toString() + " request deletion of record " + recordId.toString() + "\n");
     if (isAuthority(requestor)){
       log.append("Deletion allowed, if the record existed it has now been deleted");
-      records.removeIf(r -> r.recordId == recordId);
+      records.removeIf(r -> r.recordId.equals(recordId));
     } else {
       log.append("DENIED: user is not an authority");
     }
@@ -103,24 +106,24 @@ public class BackendEntry {
   }
   private boolean isAuthority(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
-    return info.type == UserType.AUTHORITY;
+    return info.type.equals(UserType.AUTHORITY);
   }  
   private boolean isDoctor(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
-    return info.type == UserType.DOCTOR;
+    return info.type.equals(UserType.DOCTOR);
   }
   private boolean isNurse(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
-    return info.type == UserType.NURSE;
+    return info.type.equals(UserType.NURSE);
   }
   private boolean isAssociated(MedicalRecordEntry entry, AuthenticatedId requestor){
-    return (entry.nurse == requestor.id() || entry.doctor == requestor.id());
+    return (entry.nurse.equals(requestor.id()) || entry.doctor.equals(requestor.id()));
   }
   private boolean isSameDivision(MedicalRecordEntry entry, AuthenticatedId requestor){
     if (!divisionOf(requestor).isPresent()){
       return false;
     } 
-    return entry.division == divisionOf(requestor).get();
+    return entry.division.equals(divisionOf(requestor).get());
   }
   private Optional<String> divisionOf(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());

@@ -11,9 +11,11 @@ public class Log{
     SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
     Date date = new Date();
     this.log = this.log + "\n--------------" + formatter.format(date) +  "-------------\n";
+    System.out.print("\n--------------" + formatter.format(date) +  "-------------\n");
   }
   public void append(String entry){
     this.log = this.log + entry;
+    System.out.print(entry);
   }
   public String content(){
     return this.log;
