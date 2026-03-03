@@ -65,7 +65,7 @@ public class server implements Runnable {
       sb.append(String.format("%02x", b));
     }
     String storedHash = sb.toString();
-    String[] value = {salt, storedHash, ":0"};
+    String[] value = {salt, storedHash, "0"};
 
     userCache.put(userId, value);
   }
@@ -292,9 +292,6 @@ public class server implements Runnable {
       addUser(pwFile, "2", "password");
       addUser(pwFile, "3", "password");
       addUser(pwFile, "4", "password");
-
-
-
       addUser(pwFile, "4567", "not_password");
     } catch (Exception e) {
       // TODO: handle exception
