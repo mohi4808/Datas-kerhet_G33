@@ -19,6 +19,10 @@ public class BackendEntry {
   private HashMap<UserId, UserInfo> users = new HashMap<>();
   private int counter = 0;
 
+  public UserInfo whoAmI(AuthenticatedId requestor){
+    return users.get(requestor.id());
+  } 
+
   public BackendEntry(){
     // Some innitial hard coded users
     UserId doctorA = new UserId(1);
