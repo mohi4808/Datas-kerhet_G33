@@ -22,9 +22,6 @@ public class BackendEntry {
   public UserInfo whoAmI(AuthenticatedId requestor){
     return users.get(requestor.id());
   } 
-  public void printLog(){
-    log.print();
-  }
 
   public BackendEntry(){
     // Some innitial hard coded users
@@ -60,7 +57,6 @@ public class BackendEntry {
     accesibleRecords
       .stream()
       .forEach(r -> log.append(r.recordId.toString() + "\n"));
-
     return accesibleRecords;
   }
   public void replaceRecordContent(RecordId recordId, String newContent, AuthenticatedId requestor){

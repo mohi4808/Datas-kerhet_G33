@@ -1,4 +1,6 @@
 .class
+*.class 
+/*.class
 .metals/
 metals.log
 metals.log.db
