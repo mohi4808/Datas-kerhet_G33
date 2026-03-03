@@ -140,7 +140,6 @@ public class server implements Runnable {
             String userId = in.readLine();  
             boolean validUserId = userCache.containsKey(userId);
             // MAYBE: certificate hash check against the certificate hashed ID here.
-            // logger needs to be changed to not store plaintext passwords.
             
             out.println("Enter password: ");
             out.println("__PROMPT__");
@@ -177,8 +176,12 @@ public class server implements Runnable {
             
             id = new UserId(Integer.parseInt(userId));
             authenticatedId = new AuthenticatedId(id);
-            // info = ..... .whoAmI()
-            info = UserInfo.newDoctor("House", "A");
+            info = backend.whoAmI(authenticatedId);
+            if (info.type == UserType.DOCTOR) {
+              System.out.println("AAAAHHHHH");
+              System.out.println(info);
+            }
+            
             loggedIn = true;
 
             out.println("You logged in!");
@@ -227,6 +230,7 @@ public class server implements Runnable {
                               " | content: " + record.content
                             );
             }
+            out.println("\n");
           } 
           else if (action.equals("2")) {
             out.println("Enter the ID of record you wish to edit:");
@@ -254,15 +258,15 @@ public class server implements Runnable {
             backend.deleteRecord(record, authenticatedId);
           } 
           else if (action.equals("4")) {
-            if (info.type == UserType.NURSE || info.type != UserType.PATIENT) {
+            if (info.type == UserType.NURSE || info.type == UserType.PATIENT) {
               out.println("If you are not a doctor or authority, you cannot add a user.");
               continue;
             }
-            out.println("Enter ID of patient you wish to add:");
+            out.println("Enter ID of the patient for which you wish to add a record:");
             out.println("__PROMPT__");
             UserId patient = new UserId(Integer.parseInt(in.readLine()));
 
-            out.println("Enter ID of nurse to said patient:");
+            out.println("Enter ID of nurse presiding over the record:");
             out.println("__PROMPT__");
             UserId nurse = new UserId(Integer.parseInt(in.readLine()));
             
@@ -295,17 +299,6 @@ public class server implements Runnable {
   
   private void newListener() { (new Thread(this)).start(); } // calls run()
   public static void main(String args[]) {
-    // try {
-    //   System.out.println(
-    //     Arrays.toString(
-    //     SSLContext.getDefault()
-    //       .getDefaultSSLParameters()
-    //       .getCipherSuites())
-    //   );
-    // } catch (NoSuchAlgorithmException e){
-    //   //...
-    // }
-
     parsePwFile(pwFile);
 
     try {
@@ -314,9 +307,6 @@ public class server implements Runnable {
       addUser(pwFile, "2", "password");
       addUser(pwFile, "3", "password");
       addUser(pwFile, "4", "password");
-
-
-
       addUser(pwFile, "4567", "not_password");
     } catch (Exception e) {
       // TODO: handle exception
@@ -324,7 +314,6 @@ public class server implements Runnable {
 
     // writes to pwfile very few minutes
     // this needs to be concurrent, i.e synchronized or something.
-    // first solve the 
     ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     scheduler.scheduleAtFixedRate(() -> {
       try {
