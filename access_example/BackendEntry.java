@@ -47,8 +47,9 @@ public class BackendEntry {
   public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
     // fetch all records the user has access to 
     List<MedicalRecordEntry> accesibleRecords = records.stream()
-      .filter(r -> r.patient == patient)
-      .filter(r-> r.patient == requestor.id() || isAssociated(r, requestor) || isSameDivision(r, requestor) || isAuthority(requestor))
+      //.peek(r -> System.out.print(r.toString()))
+      .filter(r -> r.patient.equals(patient))
+      .filter(r-> r.patient.equals(requestor.id()) || isAssociated(r, requestor) || isSameDivision(r, requestor) || isAuthority(requestor))
       .collect(toList());
 
     log.start();
@@ -66,7 +67,7 @@ public class BackendEntry {
       log.append("DENIED: unsuitable role, patients can't change record content\n");
       return;
     } 
-    MedicalRecordEntry entry = records.stream().filter(r -> r.recordId == recordId).findAny().orElse(null);
+    MedicalRecordEntry entry = records.stream().filter(r -> r.recordId.equals(recordId)).findAny().orElse(null);
     if(entry == null){
       log.append("ERROR: no such entry exists\n");
       return;
@@ -98,7 +99,7 @@ public class BackendEntry {
     log.append("User " + requestor.toString() + " request deletion of record " + recordId.toString() + "\n");
     if (isAuthority(requestor)){
       log.append("Deletion allowed, if the record existed it has now been deleted");
-      records.removeIf(r -> r.recordId == recordId);
+      records.removeIf(r -> r.recordId.equals(recordId));
     } else {
       log.append("DENIED: user is not an authority");
     }
@@ -117,7 +118,7 @@ public class BackendEntry {
     return info.type == UserType.NURSE;
   }
   private boolean isAssociated(MedicalRecordEntry entry, AuthenticatedId requestor){
-    return (entry.nurse == requestor.id() || entry.doctor == requestor.id());
+    return (entry.nurse.equals(requestor.id()) || entry.doctor.equals(requestor.id()));
   }
   private boolean isSameDivision(MedicalRecordEntry entry, AuthenticatedId requestor){
     if (!divisionOf(requestor).isPresent()){
