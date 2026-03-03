@@ -24,6 +24,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import access_example.UserId;
+import access_example.UserInfo;
+import access_example.UserType;
 import access_example.AuthenticatedId;
 import access_example.BackendEntry;
 import access_example.MedicalRecordEntry;
@@ -33,7 +35,7 @@ public class server implements Runnable {
   private ServerSocket serverSocket = null;
   private static int numConnectedClients = 0;
   private static final ConcurrentHashMap<String, String[]> userCache = new ConcurrentHashMap<>();
-  private static final BackendEntry backend = new BackendEntry();
+  private final BackendEntry backend = new BackendEntry();
   private static final String pwFile =  "pwfile.txt";
   
   public server(ServerSocket ss) throws IOException {
@@ -65,7 +67,7 @@ public class server implements Runnable {
       sb.append(String.format("%02x", b));
     }
     String storedHash = sb.toString();
-    String[] value = {salt, storedHash, ":0"};
+    String[] value = {salt, storedHash, "0"};
 
     userCache.put(userId, value);
   }
@@ -123,68 +125,77 @@ public class server implements Runnable {
       in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
       boolean loggedIn = false;
+      UserInfo info = null;
       UserId id = null;
       AuthenticatedId  authenticatedId = null;
 
       while (true) {
-        if (!loggedIn) {
-          boolean validUserPw = false;
-          boolean tooManyLogins = false;
-          
-          out.println("Enter personal ID:");
-          out.println("__PROMPT__");
-          String userId = in.readLine();  
-          boolean validUserId = userCache.containsKey(userId);
-          // MAYBE: certificate hash check against the certificate hashed ID here.
-          // logger needs to be changed to not store plaintext passwords.
-
-          out.println("Enter password: ");
-          out.println("__PROMPT__");
-          String password = in.readLine();
-  
-          if (validUserId) {
-            String[] userInfo = userCache.get(userId);
-            int attempts = Integer.parseInt(userInfo[2]);
+        try {
+          if (!loggedIn) {
+            boolean validUserPw = false;
+            boolean tooManyLogins = false;
             
-            if (attempts <= 5) {
-              validUserPw = verifyPassword(password, userInfo[0], userInfo[1]);
-              if (validUserPw) {
-                attempts = 0;
-                userInfo[2] = "0";
+            out.println("Enter personal ID:");
+            out.println("__PROMPT__");
+            String userId = in.readLine();  
+            boolean validUserId = userCache.containsKey(userId);
+            // MAYBE: certificate hash check against the certificate hashed ID here.
+            // logger needs to be changed to not store plaintext passwords.
+            
+            out.println("Enter password: ");
+            out.println("__PROMPT__");
+            String password = in.readLine();
+            
+            if (validUserId) {
+              String[] userInfo = userCache.get(userId);
+              int attempts = Integer.parseInt(userInfo[2]);
+              
+              if (attempts <= 5) {
+                validUserPw = verifyPassword(password, userInfo[0], userInfo[1]);
+                if (validUserPw) {
+                  attempts = 0;
+                  userInfo[2] = "0";
+                } else {
+                  attempts += 1; 
+                  userInfo[2] = String.valueOf(attempts);
+                } 
+                userCache.put(userId, userInfo); 
               } else {
-                attempts += 1; 
-                userInfo[2] = String.valueOf(attempts);
-              } 
-              userCache.put(userId, userInfo); 
-            } else {
-              tooManyLogins = true;
+                tooManyLogins = true;
+              }
             }
+            
+            if (tooManyLogins) {
+              out.println("Too many failed attempts, account locked. Please contact 070 123 45 67.");
+              continue;
+            }
+            
+            if (!validUserId || !validUserPw) {
+              out.println("Invalid username or password.");
+              continue;
+            }
+            
+            id = new UserId(Integer.parseInt(userId));
+            authenticatedId = new AuthenticatedId(id);
+            // info = ..... .whoAmI()
+            info = UserInfo.newDoctor("House", "A");
+            loggedIn = true;
+
+            out.println("You logged in!");
+            break;
           }
-  
-          if (tooManyLogins) {
-            out.println("Too many failed attempts, account locked. Please contact 070 123 45 67.");
-            continue;
-          }
-  
-          if (!validUserId || !validUserPw) {
-            out.println("Invalid username or password.");
-            continue;
-          }
-  
-          id = new UserId(Integer.parseInt(userId));
-          authenticatedId = new AuthenticatedId(id);
-          loggedIn = true;
+        } catch (NumberFormatException e) {
+            out.println("Error: illformatted. Try again.");
+        } catch (Exception e) {
+            out.println("System error occurred.");
+            e.printStackTrace();
         }
-
-        out.println("You logged in!");
-        break;
-
-        // implement actually getting the values and such
       }
+
 
       while (loggedIn) {
         try {
-          out.println("Select an action: \n[1] Read Record \n[2] Edit Record \n[3] Delete Record \n[4] Create Record \n[5] Quit");        
+          out.println("Select an action: \n[1] Read Patient Records \n[2] Edit Record \n[3] Delete Record \n[4] Create Record \n[5] Quit"); 
           out.println("__PROMPT__");
           String action = in.readLine();
 
@@ -193,7 +204,7 @@ public class server implements Runnable {
             break;
           }
           if (action.equals("1")) {
-            out.println("Enter patient record you wish to read:");
+            out.println("Enter ID of patient whose records you wish to read:");
             out.println("__PROMPT__");
             String patientStr = in.readLine();
             UserId patient = new UserId(Integer.parseInt(patientStr));
@@ -201,6 +212,7 @@ public class server implements Runnable {
             List<MedicalRecordEntry> records = backend.requestPatientRecords(patient, authenticatedId);
 
             if (records.isEmpty()) {
+              out.println("Records: " + records.toString());
               out.println("No records for this patient.");
               continue;
             }
@@ -219,8 +231,8 @@ public class server implements Runnable {
           else if (action.equals("2")) {
             out.println("Enter the ID of record you wish to edit:");
             out.println("__PROMPT__");
-            
             RecordId record = new RecordId(Integer.parseInt(in.readLine()));
+
             out.println("Enter the new content of the record:");
             out.println("__PROMPT__");
             String content = in.readLine();
@@ -228,6 +240,11 @@ public class server implements Runnable {
             backend.replaceRecordContent(record, content, authenticatedId);;
           } 
           else if (action.equals("3")) {
+            if (info.type != UserType.AUTHORITY) {
+              out.println("Only authorities may delete a user.");
+              continue;
+            }
+
             out.println("Enter the ID of record you wish to delete:");
             out.println("__PROMPT__");
             String recordStr = in.readLine();
@@ -237,13 +254,18 @@ public class server implements Runnable {
             backend.deleteRecord(record, authenticatedId);
           } 
           else if (action.equals("4")) {
+            if (info.type == UserType.NURSE || info.type != UserType.PATIENT) {
+              out.println("If you are not a doctor or authority, you cannot add a user.");
+              continue;
+            }
             out.println("Enter ID of patient you wish to add:");
             out.println("__PROMPT__");
             UserId patient = new UserId(Integer.parseInt(in.readLine()));
+
             out.println("Enter ID of nurse to said patient:");
             out.println("__PROMPT__");
             UserId nurse = new UserId(Integer.parseInt(in.readLine()));
-
+            
             backend.createNewRecord(patient, nurse, authenticatedId);
           } 
           else {
