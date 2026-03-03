@@ -47,7 +47,6 @@ public class BackendEntry {
   public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
     // fetch all records the user has access to 
     List<MedicalRecordEntry> accesibleRecords = records.stream()
-      //.peek(r -> System.out.print(r.toString()))
       .filter(r -> r.patient.equals(patient))
       .filter(r-> r.patient.equals(requestor.id()) || isAssociated(r, requestor) || isSameDivision(r, requestor) || isAuthority(requestor))
       .collect(toList());
@@ -107,15 +106,15 @@ public class BackendEntry {
   }
   private boolean isAuthority(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
-    return info.type == UserType.AUTHORITY;
+    return info.type.equals(UserType.AUTHORITY);
   }  
   private boolean isDoctor(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
-    return info.type == UserType.DOCTOR;
+    return info.type.equals(UserType.DOCTOR);
   }
   private boolean isNurse(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
-    return info.type == UserType.NURSE;
+    return info.type.equals(UserType.NURSE);
   }
   private boolean isAssociated(MedicalRecordEntry entry, AuthenticatedId requestor){
     return (entry.nurse.equals(requestor.id()) || entry.doctor.equals(requestor.id()));
@@ -124,7 +123,7 @@ public class BackendEntry {
     if (!divisionOf(requestor).isPresent()){
       return false;
     } 
-    return entry.division == divisionOf(requestor).get();
+    return entry.division.equals(divisionOf(requestor).get());
   }
   private Optional<String> divisionOf(AuthenticatedId requestor){
     UserInfo info = users.get(requestor.id());
