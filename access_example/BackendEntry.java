@@ -22,6 +22,9 @@ public class BackendEntry {
   public UserInfo whoAmI(AuthenticatedId requestor){
     return users.get(requestor.id());
   } 
+  public void printLog(){
+    log.print();
+  }
 
   public BackendEntry(){
     // Some innitial hard coded users
@@ -41,7 +44,7 @@ public class BackendEntry {
     replaceRecordContent(record1, "test ", new AuthenticatedId(patient1));
     replaceRecordContent(record1, "test ", new AuthenticatedId(nurseA));
     replaceRecordContent(record1, "test ", new AuthenticatedId(doctorB));
-    log.print();
+    //log.print();
   }
 
   public List<MedicalRecordEntry> requestPatientRecords(UserId patient, AuthenticatedId requestor){
