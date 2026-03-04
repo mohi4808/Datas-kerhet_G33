@@ -307,6 +307,7 @@ public class server implements Runnable {
       addUser(pwFile, "2", "password");
       addUser(pwFile, "3", "password");
       addUser(pwFile, "4", "password");
+      addUser(pwFile, "5", "password");
       addUser(pwFile, "4567", "not_password");
     } catch (Exception e) {
       // TODO: handle exception

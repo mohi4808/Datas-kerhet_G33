@@ -29,11 +29,14 @@ public class BackendEntry {
     UserId doctorB = new UserId(2);
     UserId nurseA = new UserId(3);
     UserId patient1 = new UserId(4);
+    UserId authority1 = new UserId(5);
+
 
     users.put(doctorA, UserInfo.newDoctor("Dr Doctor", "A"));
     users.put(doctorB, UserInfo.newDoctor("Dr Feelgood", "B"));
     users.put(nurseA, UserInfo.newNurse("R.N. Annie Wilkes", "A"));
     users.put(patient1, UserInfo.newPatient("John Doe"));
+    users.put(authority1, UserInfo.newAuthority("Big brother"));
     
     RecordId record1 = createNewRecord(patient1, nurseA, new AuthenticatedId(doctorA)).get();
     requestPatientRecords(patient1, new AuthenticatedId(patient1));
