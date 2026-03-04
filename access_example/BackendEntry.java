@@ -39,7 +39,7 @@ public class BackendEntry {
     requestPatientRecords(patient1, new AuthenticatedId(patient1));
     requestPatientRecords(patient1, new AuthenticatedId(doctorB));
     replaceRecordContent(record1, "test ", new AuthenticatedId(patient1));
-    replaceRecordContent(record1, "test ", new AuthenticatedId(nurseA));
+    replaceRecordContent(record1, "The patient has somehow gained the ability to cast magic ", new AuthenticatedId(nurseA));
     replaceRecordContent(record1, "test ", new AuthenticatedId(doctorB));
     //log.print();
   }
